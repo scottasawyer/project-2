@@ -1,31 +1,71 @@
-var http = require("http");
-var fs = require("fs");
+require("dotenv").config();
+const express = require("express"),
+  passport = require('passport'),
+  session = require('express-session'),
+  bodyParser = require("body-parser"),
+  exphbs = require("express-handlebars"),
+  env = require('dotenv').load(),
+  db = require("./models"),
+  app = express(),
+  PORT = process.env.PORT || 3000;
 
-// Set our port to 8080
-var PORT = process.env.PORT || 8080;
+// Middleware
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use(express.static("public"));
 
-var server = http.createServer(handleRequest);
+// Passport
+app.use(session({
+  secret: 'keyboard cat',
+  resave: true,
+  saveUninitialized:true
+}));
+app.use(passport.initialize());
+app.use(passport.session()); //persistent login sessions
 
-function handleRequest(req, res) {
+// Handlebars
+app.engine(
+  "handlebars",
+  exphbs({
+    defaultLayout: "main"
+  })
+);
+app.set("view engine", "handlebars");
 
-    var path = req.url;
+// Global variables
+app.use(function (req, res, next) {
+  res.locals.user = req.user || null;
+  next();
+});
 
-    switch (path) {
+// Routes
+require('./routes/auth')(app, passport);
+require('./config/passport/passport.js')(passport, db.Authors); //Load Passport Strategies
+require("./routes/apiRoutes")(app);
+require("./routes/apiRoutes-declan")(app);
+require("./routes/apiPosts")(app);
+require("./routes/htmlRoutes")(app);
 
-         default:
-            return renderHTML("/google3e6162d887ea83a2.html", res);
-    }
-};
 
+var syncOptions = { force: false };
 
-function renderHTML(filePath, res) {
-    return fs.readFile(__dirname + filePath, function (err, data) {
-        res.writeHead(200, { "Content-Type": "text/html" });
-        res.end(data);
-    });
+// If running a test, set syncOptions.force to true
+// clearing the `testdb`
+if (process.env.NODE_ENV === "test") {
+  syncOptions.force = false;
 }
 
-// Starts our server.
-server.listen(PORT, function () {
-    console.log("Server is listening on PORT: " + PORT);
+
+
+// Starting the server, syncing our models ------------------------------------/
+db.sequelize.sync(syncOptions).then(function() {
+  app.listen(PORT, function() {
+    console.log(
+      "==> 🌎  Listening on port %s. Visit http://localhost:%s/ in your browser.",
+      PORT,
+      PORT
+    );
+  });
 });
+
+module.exports = app;
