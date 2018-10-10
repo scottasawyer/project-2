@@ -8,16 +8,10 @@ $(document).ready(() => {
         }
     });
 
-    const getLocalPosts = postal => {
-        $.get("blueit/posts/" + postal, data => {
-            // renders local posts page
-        })
-    }
-
     // Render a users posts
     const renderLocalPosts = postal => {
-        // $.get("api/posts/" + postal, data => {
-        $.get("api/posts/03825", data => {
+        $.get("api/posts/" + postal, data => {
+        // $.get("api/posts/03825", data => {
             // console.log(data);
 
             $(".local-posts").empty();
@@ -75,8 +69,7 @@ $(document).ready(() => {
             if (err) return console.log(err);
             console.log(err || location);
             if (location) {
-                sessionStorage.setItem('location', location.address.postalCode);
-                // renderLocalPosts(location.address.postalCode)
+                renderLocalPosts(location.address.postalCode)
             }
             else {
                 console.log("user denied access to location");
@@ -84,8 +77,4 @@ $(document).ready(() => {
             
         });
     };
-
-    $(document).on("click", "#side-nav-location", () => {
-        renderLocalPosts(location.address.postalCode)
-    })
 })
