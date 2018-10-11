@@ -9,11 +9,6 @@ module.exports = function (app, passport) {
 
         failureRedirect: '/signup'
     }));
-    app.get('/logout', function (req, res) {
-        req.session.destroy(function (err) {
-            res.redirect("/");
-        });
-    });
     // app.post('/signin', function (req, res, next) {
     //     passport.authenticate('local-signin', function (err, user) {
     //         if (err) {
@@ -42,5 +37,12 @@ module.exports = function (app, passport) {
         console.log(req.user.UserName)
         res.redirect('/blueit')
 });
+
+    app.get('/logout', function (req, res) {
+        req.session.destroy(function (err) {
+            res.redirect("/");
+        });
+    });
+
 }
 
